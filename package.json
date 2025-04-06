@@ -1,0 +1,16 @@
+{
+  "name": "simple-fetch",
+  "scripts": {
+    "dev": "bun run --hot src/index.ts"
+  },
+  "dependencies": {
+    "@types/lodash": "^4.17.16",
+    "axios": "^1.8.4",
+    "hono": "^4.7.5",
+    "lodash": "^4.17.21",
+    "moment": "^2.30.1"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  }
+}
