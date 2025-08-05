@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>SSE Client Test</title>
+  </head>
+  <body>
+    <h1>SSE Client Test</h1>
+    <pre id="log"></pre>
+
+    <script>
+      const logEl = document.getElementById('log');
+
+      function log(msg) {
+        logEl.textContent += msg + '\n';
+        console.log(msg);
+      }
+
+      const es = new EventSource('http://localhost:42069/sse');
+
+      es.onopen = () => log('✅ Connected to SSE');
+
+      es.onerror = (err) => log('❌ SSE error: ' + JSON.stringify(err));
+
+      es.onmessage = (event) => {
+        log(`📨 Default message: ${event.data}`);
+      };
+
+      es.addEventListener('main', (event) => {
+        try {
+          const parsed = JSON.parse(event.data);
+          log(`🔥 Event [main]: ${JSON.stringify(parsed, null, 2)}`);
+        } catch (e) {
+          log(`⚠️ Error parsing main event: ${event.data}`);
+        }
+      });
+    </script>
+  </body>
+</html>

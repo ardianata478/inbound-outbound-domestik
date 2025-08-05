@@ -25,8 +25,9 @@ type Result = {
 
 const app = new Hono();
 
-const username = 'dashboard';
-const password = 'sUxLTKpvnrpLHLJ';
+const username = process.env.USERNAME_API;
+const password = process.env.PASSWORD_API;
+
 const token = btoa(`${username}:${password}`);
 
 app.get('/', async (c) => {
@@ -36,15 +37,26 @@ app.get('/', async (c) => {
   const tanggal_awal = query.tanggal_awal ?? moment().subtract(1, 'days').format('YYYY-MM-DD');
   const tanggal_akhir = query.tanggal_akhir ?? moment().format('YYYY-MM-DD');
 
-  const data = await axios.post(`https://hubnet.kemenhub.go.id/backend/api/siasati/pergerakan-domestik-internasional?tanggal_awal=${tanggal_awal}&tanggal_akhir=${tanggal_akhir}`, {
-
-  }, {
-    headers: {
-      Authorization: `Basic ${token}`
+  const data = await axios.post(`${process.env.HOST}?tanggal_awal=${tanggal_awal}&tanggal_akhir=${tanggal_akhir}`,
+    {
+      "tanggal_awal_1": tanggal_awal,
+      "tanggal_akhir_1": tanggal_akhir,
+      "tanggal_awal_2": "",
+      "tanggal_akhir_2": "",
+      "provinsi": "",
+      "moda": "laut",
+      "endpoints": [
+        "data-produksi"
+      ]
     }
-  }
+    , {
+      headers: {
+        Authorization: `Basic ${token}`
+      }
+    }
   );
 
+  //  cek data ada jenis include inbound, outbound, domestik
   const normalizeKategori = (kategori: string): NormalizedKategori => {
     const lower = kategori.toLowerCase();
     if (lower.includes('inbound')) return 'inbound';
@@ -52,13 +64,15 @@ app.get('/', async (c) => {
     return 'domestik';
   };
 
+  //  cek data ada jenis include penumpang, kapal, pesawat
   const normalizeJenis = (jenis: string): NormalizedJenis => {
     if (jenis.includes('Penumpang')) return 'penumpang';
     if (jenis.includes('Kapal')) return 'kapal';
-    if (jenis.includes('Pesawat')) return 'kapal';
+    if (jenis.includes('Pesawat')) return 'pesawat';
     throw new Error(`Unknown jenis: ${jenis}`);
   };
 
+  // group by moda,  by jenis,  by kategori
   const result: Result = _(data.data.data)
     .groupBy(d => d.moda.toLowerCase())
     .mapValues(modas =>
